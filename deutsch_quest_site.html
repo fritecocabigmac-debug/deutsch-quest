@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Deutsch Quest 🇩🇪</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef2ff,#f8fafc);color:#172033}
+.wrap{max-width:850px;margin:auto;padding:24px}.card{background:#fff;border:1px solid #e2e8f0;border-radius:24px;padding:24px;box-shadow:0 10px 30px #0001}
+h1{font-size:36px;margin:0 0 8px}.sub{color:#64748b}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:24px}
+button{border:1px solid #dbe2ea;background:#fff;border-radius:14px;padding:15px;font-size:16px;cursor:pointer}.gamebtn{padding:22px;text-align:left}.gamebtn b{display:block;font-size:19px;margin-bottom:5px}.gamebtn span{color:#64748b}
+button:hover{background:#f8fafc}.primary{background:#4f46e5;color:#fff;border-color:#4f46e5}.danger{color:#b91c1c}
+.top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.pill{padding:8px 12px;border:1px solid #e2e8f0;border-radius:99px;color:#475569}
+.barbg{height:9px;background:#e8edf3;border-radius:99px;margin:18px 0}.bar{height:100%;width:0;background:#4f46e5;border-radius:99px}
+.question{text-align:center;font-size:30px;font-weight:700;margin:35px 0 20px}.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.feedback{text-align:center;min-height:28px;margin:18px;font-weight:bold}.center{text-align:center}.hidden{display:none}
+input{width:100%;padding:15px;border:1px solid #cbd5e1;border-radius:12px;font-size:18px}.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.good{background:#dcfce7!important;border-color:#22c55e!important}.bad{background:#fee2e2!important;border-color:#ef4444!important}
+@media(max-width:600px){.grid,.answers{grid-template-columns:1fr}h1{font-size:30px}.question{font-size:25px}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card" id="app"></div></div>
+<script>
+const words=[
+["der Vor- und Nachname","le prénom et le nom"],["das Alter","l’âge"],
+["der Geburtstag","l’anniversaire / la date de naissance"],["die Größe","la taille"],
+["der Wohnort","le lieu de résidence"],["die Wohnung","le logement / l’appartement"],
+["die Geschwister","les frères et sœurs"],["das Haustier","l’animal domestique"],
+["das Hobby / die Hobbys","le loisir / les loisirs"],["die Sportart / die Sportarten","le sport / les sports"],
+["das Lieblingsessen","le plat préféré"],["die Schule","l’école"],
+["die Klasse","la classe"],["das Lieblingsfach","la matière préférée"],
+["die Zukunftspläne","les projets d’avenir"]
+];
+const app=document.getElementById("app");
+let mode="",order=[],i=0,score=0,answered=false;
+function shuffle(a){a=[...a];for(let x=a.length-1;x>0;x--){let y=Math.floor(Math.random()*(x+1));[a[x],a[y]]=[a[y],a[x]]}return a}
+function home(){
+app.innerHTML=`<div class="center"><div style="font-size:55px">🇩🇪</div><h1>Deutsch Quest</h1><p class="sub">Apprends les mots de ta première colonne en jouant !</p></div>
+<div class="grid">
+<button class="gamebtn" data-m="quiz"><b>🎯 Quiz</b><span>Choisis la bonne traduction.</span></button>
+<button class="gamebtn" data-m="write"><b>✍️ Écris le mot</b><span>Retrouve le mot allemand.</span></button>
+<button class="gamebtn" data-m="reverse"><b>🔄 Allemand → Français</b><span>Traduis les mots allemands.</span></button>
+<button class="gamebtn" data-m="mix"><b>🎲 Mode mixte</b><span>Un mélange de tous les défis.</span></button>
+</div>
+<div class="center" style="margin-top:22px;color:#64748b">15 mots • score sur 15 • ordre aléatoire</div>`;
+app.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>start(b.dataset.m));
+}
+function start(m){mode=m;order=shuffle([...Array(words.length).keys()]);i=0;score=0;show()}
+function header(){
+return `<div class="top"><strong>🇩🇪 Deutsch Quest</strong><span class="pill">⭐ ${score} points · ${i+1}/${words.length}</span></div>
+<div class="barbg"><div class="bar" style="width:${i/words.length*100}%"></div></div>`;
+}
+function show(){
+answered=false;let idx=order[i],w=words[idx];
+let type=mode==="mix"?(i%3):mode;
+let reverse=type==="reverse"||type===2;
+let write=type==="write"||type===1;
+let q=reverse?w[0]:w[1];
+if(write) renderWrite(idx,q); else renderQuiz(idx,q,reverse);
+}
+function renderQuiz(idx,q,reverse){
+let correct=reverse?words[idx][1]:words[idx][0];
+let opts=shuffle([idx,...shuffle(order.filter(x=>x!==idx)).slice(0,3)]);
+app.innerHTML=header()+`<div class="question">${q}</div><div class="sub center">Choisis la bonne réponse.</div><div class="answers" id="ans"></div><div id="fb" class="feedback"></div><div class="actions"><button id="next" class="primary" disabled>Suivant →</button><button id="home">🏠 Accueil</button></div>`;
+let a=document.getElementById("ans");
+opts.forEach(x=>{let b=document.createElement("button");b.textContent=reverse?words[x][1]:words[x][0];b.onclick=()=>answerQuiz(b,x,idx,correct);a.appendChild(b)});
+document.getElementById("home").onclick=home;
+}
+function answerQuiz(btn,x,idx,correct){
+if(answered)return;answered=true;
+document.querySelectorAll("#ans button").forEach(b=>b.disabled=true);
+if(x===idx){score++;btn.classList.add("good");document.getElementById("fb").textContent="✅ Correct !"}
+else{btn.classList.add("bad");document.getElementById("fb").textContent="❌ Bonne réponse : "+correct}
+document.getElementById("next").disabled=false;document.getElementById("next").onclick=next;
+}
+function renderWrite(idx,q){
+app.innerHTML=header()+`<div class="question">${q}</div><form id="form"><input id="input" placeholder="Écris le mot allemand…" autocomplete="off"><div class="actions"><button class="primary">Vérifier ✓</button></div></form><div id="fb" class="feedback"></div><div class="actions"><button id="next" class="primary" disabled>Suivant →</button><button id="home">🏠 Accueil</button></div>`;
+document.getElementById("home").onclick=home;
+document.getElementById("form").onsubmit=e=>{e.preventDefault();if(answered)return;answered=true;let val=document.getElementById("input").value.trim().toLowerCase(),correct=words[idx][0].toLowerCase();document.getElementById("input").disabled=true;if(val===correct){score++;document.getElementById("fb").textContent="✅ Bravo !"}else document.getElementById("fb").textContent="❌ Réponse : "+words[idx][0];document.getElementById("next").disabled=false};
+document.getElementById("next").onclick=next;document.getElementById("input").focus();
+}
+function next(){i++;if(i>=words.length)finish();else show()}
+function finish(){
+let pct=Math.round(score/words.length*100);
+app.innerHTML=`<div class="center"><div style="font-size:60px">🏆</div><h1>Partie terminée !</h1><p style="font-size:24px"><strong>${score} / ${words.length}</strong></p><p class="sub">${pct}% de réussite</p><div class="actions"><button class="primary" id="again">🔄 Rejouer</button><button id="home">🏠 Accueil</button></div></div>`;
+document.getElementById("again").onclick=()=>start(mode);document.getElementById("home").onclick=home;
+}
+home();
+</script>
+</body>
+</html>
